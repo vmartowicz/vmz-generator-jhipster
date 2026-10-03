@@ -79,6 +79,8 @@ export type Application<E extends BaseApplicationEntity = Entity> = SpringBootAp
     devDatabasePassword?: string;
 
     prodDatabaseName?: string;
+    /** Port of the database on localhost, exposed by Docker Compose */
+    prodDatabasePort?: number;
     prodJdbcUrl?: string;
     prodJdbcDriver?: string;
     prodHibernateDialect?: string;

@@ -60,6 +60,20 @@ describe('generator - sql - database-url', () => {
         expect(getJdbcUrl(POSTGRESQL, { databaseName: 'test', hostname: 'localhost' })).toEqual('jdbc:postgresql://localhost:5432/test');
       });
     });
+    describe('when called for postgresql with a custom port', () => {
+      it('return jdbc:postgresql://localhost:5433/test', () => {
+        expect(getJdbcUrl(POSTGRESQL, { databaseName: 'test', hostname: 'localhost', port: 5433 })).toEqual(
+          'jdbc:postgresql://localhost:5433/test',
+        );
+      });
+    });
+    describe('when called for mssql with a custom port', () => {
+      it('return jdbc:sqlserver://localhost:1434;database=test;encrypt=false', () => {
+        expect(getJdbcUrl(MSSQL, { databaseName: 'test', hostname: 'localhost', port: 1434 })).toEqual(
+          'jdbc:sqlserver://localhost:1434;database=test;encrypt=false',
+        );
+      });
+    });
     describe('when called for oracle', () => {
       it('return jdbc:oracle:thin:@localhost:1521:test', () => {
         expect(getJdbcUrl(ORACLE, { databaseName: 'test', hostname: 'localhost' })).toEqual('jdbc:oracle:thin:@localhost:1521:test');
@@ -182,6 +196,13 @@ describe('generator - sql - database-url', () => {
     describe('when called for postgresql', () => {
       it('return r2dbc:postgresql://localhost:5432/test', () => {
         expect(getR2dbcUrl(POSTGRESQL, { databaseName: 'test', hostname: 'localhost' })).toEqual('r2dbc:postgresql://localhost:5432/test');
+      });
+    });
+    describe('when called for postgresql with a custom port', () => {
+      it('return r2dbc:postgresql://localhost:5433/test', () => {
+        expect(getR2dbcUrl(POSTGRESQL, { databaseName: 'test', hostname: 'localhost', port: 5433 })).toEqual(
+          'r2dbc:postgresql://localhost:5433/test',
+        );
       });
     });
     describe('when called for oracle', () => {

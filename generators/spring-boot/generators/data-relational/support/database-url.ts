@@ -23,13 +23,19 @@ import databaseData, { type getData } from './database-data.ts';
 
 const { ORACLE, MYSQL, POSTGRESQL, MARIADB, MSSQL, H2_DISK, H2_MEMORY } = databaseTypes;
 
-type DatabaseUrlOptions = Parameters<getData>[0] & { databaseName?: string; hostname?: string; skipExtraOptions?: boolean };
+type DatabaseUrlOptions = Parameters<getData>[0] & {
+  databaseName?: string;
+  hostname?: string;
+  /** Overrides the default port of the database */
+  port?: number;
+  skipExtraOptions?: boolean;
+};
 
 export default function getDatabaseUrl(databaseType: string, protocol: 'r2dbc' | 'jdbc', options: DatabaseUrlOptions = {}): string {
   if (!protocol) {
     throw new Error('protocol is required');
   }
-  const { databaseName, hostname, skipExtraOptions } = options;
+  const { databaseName, hostname, port: portOverride, skipExtraOptions } = options;
   if (!databaseName) {
     throw new Error("option 'databaseName' is required");
   }
@@ -51,7 +57,11 @@ export default function getDatabaseUrl(databaseType: string, protocol: 'r2dbc' |
       ...databaseDataForType.getData(options),
     };
   }
-  const { port = '', protocolSuffix = '', extraOptions = '', localDirectory = options.localDirectory } = databaseDataForType;
+  const { protocolSuffix = '', extraOptions = '', localDirectory = options.localDirectory } = databaseDataForType;
+  let { port = '' } = databaseDataForType;
+  if (portOverride) {
+    port = port.replace(/\d+/, String(portOverride));
+  }
   let url = `${protocol}:${protocolSuffix}`;
   if (hostname || localDirectory) {
     url = `${url}${localDirectory || hostname + port}${databaseName}`;

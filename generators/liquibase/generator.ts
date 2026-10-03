@@ -125,6 +125,7 @@ export default class LiquibaseGenerator extends BaseEntityChangesGenerator<
             return getJdbcUrl(data.prodDatabaseType, {
               databaseName: data.prodDatabaseName,
               hostname: 'localhost',
+              port: data.prodDatabasePort,
               skipExtraOptions: true,
             });
           },

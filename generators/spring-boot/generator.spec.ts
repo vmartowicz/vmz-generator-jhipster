@@ -22,7 +22,7 @@ import { basename } from 'node:path';
 
 import { PRIORITY_NAMES } from '../base-application/priorities.ts';
 import { asPostWritingTask } from '../base-application/support/task-type-inference.ts';
-import { SERVER_MAIN_SRC_DIR } from '../generator-constants.ts';
+import { SERVER_MAIN_RES_DIR, SERVER_MAIN_SRC_DIR } from '../generator-constants.ts';
 import { filterBasicServerGenerators } from '../server/__test-support/index.ts';
 
 import Generator from './generator.ts';
@@ -130,6 +130,70 @@ describe(`generator - ${generator}`, () => {
         addLanguageCallbacks: expect.any(Array),
         supportedLanguages: expect.any(Array),
       });
+    });
+  });
+
+  describe('docker compose with H2 as dev database (#34353)', () => {
+    const applicationDevYml = `${SERVER_MAIN_RES_DIR}config/application-dev.yml`;
+
+    describe('microservice', () => {
+      before(async () => {
+        await helpers.runJHipster(generator).withJHipsterConfig({
+          applicationType: 'microservice',
+          databaseType: 'sql',
+          prodDatabaseType: 'postgresql',
+          devDatabaseType: 'h2Disk',
+          serviceDiscoveryType: 'eureka',
+          skipClient: true,
+        });
+      });
+
+      it('should disable docker compose in dev profile', () => {
+        runResult.assertFileContent(applicationDevYml, /compose:\n(?:\s+#.*\n)*\s+enabled: false\n/);
+      });
+    });
+
+    describe('monolith', () => {
+      before(async () => {
+        await helpers.runJHipster(generator).withJHipsterConfig({
+          databaseType: 'sql',
+          prodDatabaseType: 'postgresql',
+          devDatabaseType: 'h2Disk',
+          authenticationType: 'oauth2',
+          skipClient: true,
+        });
+      });
+
+      it('should keep docker compose enabled in dev profile for required services', () => {
+        runResult.assertFileContent(applicationDevYml, /compose:\n\s+enabled: true\n/);
+      });
+    });
+  });
+
+  describe('microservice database port (#34353)', () => {
+    before(async () => {
+      await helpers.runJHipster(generator).withJHipsterConfig({
+        applicationType: 'microservice',
+        databaseType: 'sql',
+        prodDatabaseType: 'postgresql',
+        devDatabaseType: 'postgresql',
+        serviceDiscoveryType: 'eureka',
+        serverPort: 8083,
+        skipClient: true,
+      });
+    });
+
+    it('should offset the database port exposed by docker compose with the server port', () => {
+      runResult.assertFileContent('src/main/docker/postgresql.yml', '127.0.0.1:5435:5432');
+    });
+
+    it('should use the offset database port in the datasource url', () => {
+      runResult.assertFileContent(`${SERVER_MAIN_RES_DIR}config/application-dev.yml`, 'jdbc:postgresql://localhost:5435/');
+      runResult.assertFileContent(`${SERVER_MAIN_RES_DIR}config/application-prod.yml`, 'jdbc:postgresql://localhost:5435/');
+    });
+
+    it('should use the offset database port in the liquibase url', () => {
+      runResult.assertFileContent('pom.xml', 'jdbc:postgresql://localhost:5435/');
     });
   });
 

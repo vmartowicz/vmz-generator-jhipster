@@ -29,6 +29,20 @@ const { ORACLE, MYSQL, POSTGRESQL, MARIADB, MSSQL, H2_MEMORY, H2_DISK } = databa
 
 const DATABASE_TYPES = [ORACLE, MYSQL, POSTGRESQL, MARIADB, MSSQL];
 const DEV_DATABASE_TYPES = [...DATABASE_TYPES, H2_MEMORY, H2_DISK];
+const DEFAULT_SERVER_PORT = 8080;
+
+/**
+ * Microservices of the same stack are started together, each one with its own database container.
+ * Offset the database port by the server port offset to avoid port conflicts (8081 => 5433 for PostgreSQL).
+ */
+const getDatabasePort = (
+  defaultPort: number | undefined,
+  { applicationTypeMicroservice, serverPort }: { applicationTypeMicroservice?: boolean; serverPort?: number },
+): number | undefined => {
+  if (!defaultPort || !applicationTypeMicroservice || !serverPort) return defaultPort;
+  const port = defaultPort + serverPort - DEFAULT_SERVER_PORT;
+  return port > 1024 && port < 65536 ? port : defaultPort;
+};
 
 export default function prepareSqlApplicationProperties({ application }: { application: SpringDataRelationalApplication }) {
   if (!application.databaseTypeSql && !application.databaseTypeNeo4j && !application.databaseTypeCassandra) {
@@ -75,15 +89,18 @@ export default function prepareSqlApplicationProperties({ application }: { appli
         prodDatabaseUsername: prodDatabaseData.defaultUsername ?? context.baseName,
         prodDatabasePassword: prodDatabaseData.defaultPassword ?? '',
         prodDatabaseName,
+        prodDatabasePort: data => getDatabasePort(prodDatabaseData.defaultPort, data),
         prodJdbcUrl: data =>
           getJdbcUrl(data.prodDatabaseType, {
             databaseName: data.prodDatabaseName,
             hostname: 'localhost',
+            port: data.prodDatabasePort,
           }),
         prodR2dbcUrl: data =>
           getR2dbcUrl(data.prodDatabaseType, {
             databaseName: data.prodDatabaseName,
             hostname: 'localhost',
+            port: data.prodDatabasePort,
           }),
       };
     },

@@ -90,7 +90,13 @@ spring:
 <%_ if (devDatabaseTypeH2Any && 'dockerServices' in locals && dockerServices?.length) { _%>
   docker:
     compose:
+<%_ if (applicationTypeMicroservice) { _%>
+      # Microservices only start their database through Docker Compose, which is not used by H2.
+      # Start shared services (registry, keycloak, broker...) from the gateway or with `npm run docker:<service>:up`.
+      enabled: false
+<%_ } else { _%>
       enabled: <%- authenticationTypeOauth2 || messageBrokerAny || serviceDiscoveryAny || cacheProviderRedis %>
+<%_ } _%>
       profiles:
         active: dev
 <%_ } _%>

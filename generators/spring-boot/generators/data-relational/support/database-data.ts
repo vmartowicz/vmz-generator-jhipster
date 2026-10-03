@@ -24,6 +24,8 @@ export type DatabaseData = {
   jdbcDriver: string;
   hibernateDialect: string;
   port?: string;
+  /** Default port of the database server, used to compute the host port exposed by Docker Compose. */
+  defaultPort?: number;
   localDirectory?: string;
   extraOptions?: string;
   defaultUsername?: string;
@@ -90,6 +92,7 @@ const h2GetProdDatabaseData = (
 const databaseData: Record<string, DatabaseDataSpec> = {
   [MSSQL]: {
     name: 'SQL Server',
+    defaultPort: 1433,
     protocolSuffix: 'sqlserver://',
     jdbcDriver: '',
     hibernateDialect: 'org.hibernate.dialect.SQLServer2012Dialect',
@@ -107,6 +110,7 @@ const databaseData: Record<string, DatabaseDataSpec> = {
   },
   [MARIADB]: {
     name: 'MariaDB',
+    defaultPort: 3306,
     protocolSuffix: 'mariadb://',
     jdbcDriver: 'org.mariadb.jdbc.Driver',
     hibernateDialect: 'org.hibernate.dialect.MariaDB103Dialect',
@@ -119,6 +123,7 @@ const databaseData: Record<string, DatabaseDataSpec> = {
   },
   [MYSQL]: {
     name: 'MySQL',
+    defaultPort: 3306,
     protocolSuffix: 'mysql://',
     jdbcDriver: 'com.mysql.cj.jdbc.Driver',
     hibernateDialect: 'org.hibernate.dialect.MySQL8Dialect',
@@ -143,6 +148,7 @@ const databaseData: Record<string, DatabaseDataSpec> = {
   },
   [POSTGRESQL]: {
     name: 'PostgreSQL',
+    defaultPort: 5432,
     protocolSuffix: 'postgresql://',
     jdbcDriver: 'org.postgresql.Driver',
     hibernateDialect: 'org.hibernate.dialect.PostgreSQLDialect',
